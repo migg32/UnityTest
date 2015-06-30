@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Names;
 
 [RequireComponent(typeof (CharacterController))]
 
@@ -7,13 +8,16 @@ public class PlayerControll : MonoBehaviour
 {
 	public float m_speed = 5;
 	public Camera m_activeCamera;
+	public float m_zoomAccelerate = 10;
 
 	private	CharacterController m_controller;
+	private Vector3 m_cameraRelativePosition;
 
 	// Use this for initialization
 	void Start() 
 	{
 		m_controller = GetComponent<CharacterController>();
+		m_cameraRelativePosition = transform.position - m_activeCamera.transform.position;
 	}
 
 	void FixedUpdate() 
@@ -24,18 +28,37 @@ public class PlayerControll : MonoBehaviour
 
 		m_controller.SimpleMove(m_speed * direction);
 
+
 		LookRotation();
+		CameraControl();
 	}
 
 	private void LookRotation()
 	{
-		//float cameraDistance;
-		//Vector3 mousePos = m_activeCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, m_activeCamera.transform.position.y));
-		Ray mousePos = m_activeCamera.ScreenPointToRay(Input.mousePosition);
+		Ray mouseRay = m_activeCamera.ScreenPointToRay(Input.mousePosition);
+		RaycastHit mouseRayHit;
+		if (Physics.Raycast(mouseRay, out mouseRayHit, m_activeCamera.farClipPlane, Names.Layers.GROUND_LAYER))
+		{
+			Vector3 mousPos = mouseRayHit.point;
+			mousPos.y += transform.position.y;
+			transform.LookAt(mousPos);
+		}
+	}
 
-		mousePos.g
-		//transform.LookAt(mousePos);
-		Debug.DrawRay(mousePos.origin, mousePos.direction*1000);
+	private void CameraControl()
+	{
+		float inputScroll = Input.GetAxis("Mouse ScrollWheel");
+		Vector3 newRelativeCamPos = m_cameraRelativePosition - inputScroll * m_activeCamera.transform.forward * m_zoomAccelerate;
+		if (newRelativeCamPos.y <= -5 && newRelativeCamPos.y >= -15)
+		{
+			m_cameraRelativePosition = newRelativeCamPos;
+		}
+
+		m_activeCamera.transform.position = transform.position - m_cameraRelativePosition;
+
+
+
+
 	}
 
 }
