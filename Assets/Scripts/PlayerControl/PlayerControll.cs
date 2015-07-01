@@ -20,7 +20,7 @@ public class PlayerControll : MonoBehaviour
 		m_cameraRelativePosition = transform.position - m_activeCamera.transform.position;
 	}
 
-	void FixedUpdate() 
+	void Update() 
 	{
 		float inputHorizontal = Input.GetAxis("Horizontal");
 		float inputVertical = Input.GetAxis("Vertical");
