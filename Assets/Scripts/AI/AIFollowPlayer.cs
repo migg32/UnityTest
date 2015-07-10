@@ -3,7 +3,7 @@ using System.Collections;
 
 [RequireComponent(typeof (NavMeshAgent))]
 
-public class FollowPlayer : MonoBehaviour
+public class AIFollowPlayer : MonoBehaviour, IUnitControl
 {
 	public string m_targetTag;
 	private Transform m_targetTranform;
@@ -19,5 +19,22 @@ public class FollowPlayer : MonoBehaviour
 	void Update()
 	{
 		m_navMeshAgent.SetDestination(m_targetTranform.position);
+	}
+
+	void OnDeath()
+	{
+		Rigidbody rigidbody = GetComponent<Rigidbody>();
+		rigidbody.constraints = RigidbodyConstraints.None;
+		rigidbody.angularDrag = 0f;
+		rigidbody.drag = 0f;
+		rigidbody.AddForce(transform.forward * 200);
+		m_navMeshAgent.enabled = false;
+		this.enabled = false;
+	}
+
+	void OnTargetDeath()
+	{
+		m_navMeshAgent.enabled = false;
+		this.enabled = false;
 	}
 }

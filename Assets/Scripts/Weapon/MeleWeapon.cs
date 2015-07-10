@@ -4,16 +4,25 @@ using System.Collections;
 public class MeleWeapon : MonoBehaviour
 {
 	public string[] m_canHitTag;
+
+	private Collider m_hitBoxCollider;
+
 	// Use this for initialization
 	void Start()
 	{
-	
+		m_hitBoxCollider = GetComponent<Collider>();
 	}
 	
 	// Update is called once per frame
 	void Update()
 	{
 		
+	}
+
+	void Attack()
+	{
+
+		//.
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -23,9 +32,12 @@ public class MeleWeapon : MonoBehaviour
 
 		if (checkHitTargets != null)
 		{
+
 			Debug.Log("Bam!!!");
 		}
 
 
 	}
+
+
 }

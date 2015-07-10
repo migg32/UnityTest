@@ -2,63 +2,68 @@
 using System.Collections;
 using Names;
 
-[RequireComponent(typeof (CharacterController))]
+[RequireComponent(typeof (Rigidbody))]
 
 public class PlayerControll : MonoBehaviour 
 {
-	public float m_speed = 5;
-	public Camera m_activeCamera;
-	public float m_zoomAccelerate = 10;
+	public float m_speed = 5f;
 
-	private	CharacterController m_controller;
-	private Vector3 m_cameraRelativePosition;
+	private	Rigidbody m_rigidbody;
+	//private Vector3 m_cameraRelativePosition;
 
 	// Use this for initialization
-	void Start() 
+	void Awake() 
 	{
-		m_controller = GetComponent<CharacterController>();
-		m_cameraRelativePosition = transform.position - m_activeCamera.transform.position;
+		m_rigidbody = GetComponent<Rigidbody>();
+		//m_cameraRelativePosition = transform.position - m_activeCamera.transform.position;
 	}
 
-	void Update() 
+	void FixedUpdate() 
 	{
-		float inputHorizontal = Input.GetAxis("Horizontal");
-		float inputVertical = Input.GetAxis("Vertical");
-		Vector3 direction = new Vector3(inputHorizontal, 0, inputVertical).normalized;
-
-		m_controller.SimpleMove(m_speed * direction);
-
+		MovePlayer();
 
 		LookRotation();
-		CameraControl();
+	}
+
+	private void MovePlayer()
+	{
+		Vector3 moveDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
+		m_rigidbody.MovePosition(transform.position + m_speed * moveDirection * Time.deltaTime);
 	}
 
 	private void LookRotation()
 	{
-		Ray mouseRay = m_activeCamera.ScreenPointToRay(Input.mousePosition);
+		Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit mouseRayHit;
-		if (Physics.Raycast(mouseRay, out mouseRayHit, m_activeCamera.farClipPlane, Names.Layers.GROUND_LAYER))
+		if (Physics.Raycast(mouseRay, out mouseRayHit, Camera.main.farClipPlane, Names.Layers.GROUND_LAYER))
 		{
-			Vector3 mousPos = mouseRayHit.point;
-			mousPos.y += transform.position.y;
-			transform.LookAt(mousPos);
+			Vector3 playerToMouse = mouseRayHit.point - transform.position;
+			playerToMouse.y = 0f;
+
+			Quaternion newRotation = Quaternion.LookRotation(playerToMouse);
+			m_rigidbody.MoveRotation(newRotation);
+
+			//Debug.Log("1");
+		}
+		else
+		{
+			Vector3 playerToMouse = Input.mousePosition - Camera.main.WorldToScreenPoint(transform.position);
+			playerToMouse.z = playerToMouse.y;
+			playerToMouse.y = 0f;
+
+			Quaternion newRotation = Quaternion.LookRotation(playerToMouse);
+			m_rigidbody.MoveRotation(newRotation);
+
+			//Debug.Log("2");
 		}
 	}
 
-	private void CameraControl()
+	void OnDie()
 	{
-		float inputScroll = Input.GetAxis("Mouse ScrollWheel");
-		Vector3 newRelativeCamPos = m_cameraRelativePosition - inputScroll * m_activeCamera.transform.forward * m_zoomAccelerate;
-		if (newRelativeCamPos.y <= -5 && newRelativeCamPos.y >= -15)
-		{
-			m_cameraRelativePosition = newRelativeCamPos;
-		}
-
-		m_activeCamera.transform.position = transform.position - m_cameraRelativePosition;
-
-
-
-
+		m_rigidbody.constraints = RigidbodyConstraints.None;
+		m_rigidbody.angularDrag = 0f;
+		m_rigidbody.drag = 0f;
+		m_rigidbody.AddForce(transform.forward * 200);
+		this.enabled = false;
 	}
-
 }
